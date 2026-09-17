@@ -1,0 +1,26 @@
+# Only source, method configuration, and minimal documentation are eligible.
+*
+!*/
+!*.py
+!*.toml
+!README.md
+!requirements.txt
+!CITATION.cff
+!.gitignore
+
+# Private or generated directories remain excluded even if they contain code.
+**/__pycache__/
+**/*.egg-info/
+**/.venv/
+**/.pytest_cache/
+**/data/
+**/results/
+**/cache/
+**/models/
+**/private_models/
+**/private/
+**/build/
+**/dist/
+**/paths.toml
+**/cohort_bag_private.toml
+**/*.local.toml

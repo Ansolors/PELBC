@@ -1,0 +1,59 @@
+protocol_id = "stress_execution_v1"
+frozen_at = "2026-08-29"
+frozen_before_any_stress_test_result = true
+primary_result_reference = "results/statistical_analysis/step_10_primary_summary.json"
+primary_model_table_reference = "results/statistical_analysis/primary_model_table_v1.csv"
+location_acoustic_comparator_selection_rule = "highest raw pooled-OOF macro average precision among learned acoustic models in the completed primary analysis"
+location_acoustic_comparator = "aves_frozen_mil"
+
+[scope]
+leave_year_out = [
+  "prior_constant",
+  "bag_size_logistic",
+  "metadata_logistic",
+  "handcrafted_logistic",
+  "hf_lw_gam",
+  "cnn_mean",
+  "panns_frozen_mil",
+  "aves_frozen_mil",
+]
+strict_forward = [
+  "prior_constant",
+  "bag_size_logistic",
+  "metadata_logistic",
+  "handcrafted_logistic",
+  "hf_lw_gam",
+  "cnn_mean",
+  "panns_frozen_mil",
+  "aves_frozen_mil",
+]
+leave_location_out = [
+  "bag_size_logistic",
+  "metadata_logistic",
+  "handcrafted_logistic",
+  "hf_lw_gam",
+  "aves_frozen_mil",
+]
+sample_rate_shift = [
+  "prior_constant",
+  "bag_size_logistic",
+  "metadata_logistic",
+  "handcrafted_logistic",
+  "hf_lw_gam",
+  "aves_frozen_mil",
+]
+
+[reporting]
+primary_probability_kind = "raw"
+secondary_probability_kind = "calibrated"
+primary_metric = "macro_average_precision"
+report_per_label_average_precision = true
+report_roc_auc_only_when_minimum_positive_and_negative_are_each_at_least = 3
+stress_tests_are_exploratory = true
+multiple_testing_claims_prohibited = true
+
+[interpretation_guard]
+leave_year_out = "Exploratory year-domain stress test on the same observational programme; it is not independent external validation, and year-specific prevalence, location, recorder and effort may all differ."
+strict_forward = "Exploratory temporal test with 2021-2023 training, 2024-only selection and a small 2025 test set; no 2025 label may influence tuning, and this does not validate real-time deployment."
+leave_location_out = "Exploratory location-domain stress test with same-campaign non-target encounters buffered; small and prevalence-shifted test strata preclude broad geographic generalization claims."
+sample_rate_shift = "Native sample rate, year, location and recorder regime are confounded; this diagnostic cannot identify a causal recorder or bandwidth effect."

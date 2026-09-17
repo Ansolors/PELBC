@@ -1,0 +1,56 @@
+protocol_id = "cohort_bag_sensitivity_v1"
+frozen_at = "2026-08-29"
+frozen_before_any_cohort_or_alternative_bag_result = true
+primary_endpoint_unchanged = true
+
+[subset_oof]
+models = [
+  "prior_constant",
+  "bag_size_logistic",
+  "metadata_logistic",
+  "handcrafted_logistic",
+  "cnn_mean",
+  "cnn_max",
+  "cnn_linear_softmax",
+  "cnn_shared_gated_attention",
+  "hf_lw_gam",
+  "panns_frozen_mil",
+  "aves_frozen_mil",
+]
+cohorts = ["primary_234", "scans_ge_2_218", "behavior_sum_equal_scans_121"]
+prediction_source = "already-complete primary outer-fold OOF predictions"
+retraining = false
+recalibration = false
+rethresholding = false
+
+[locked_hf_lw_gam]
+model_id = "hf_lw_gam"
+outer_checkpoint_source = "three official final seeds in each of five primary outer folds"
+candidate_source = "official primary inner selection in each outer fold"
+retraining = false
+reoptimization = false
+recalibration = false
+rethresholding = false
+
+[numeric_behavior_236]
+# Record IDs, campaign/fold assignments and clip counts are supplied locally.
+base_cohort = "primary_234"
+additional_labels = "four all-zero sensitivity labels as archived; not interpreted as verified absence"
+
+[alternative_bags]
+cohort = "primary_234"
+variants = ["main_discrete_4126", "all_segments_4152", "high_confidence_3884"]
+main_discrete_field = "main_discrete_whistle_instance"
+all_segments_field = "all_segments_sensitivity_instance"
+high_confidence_field = "high_confidence_sensitivity_instance"
+same_locked_models_and_fold_local_normalizers = true
+
+[statistics]
+probability_kind = "raw"
+primary_metric = "macro_average_precision"
+uncertainty = "10000-resample recording-campaign cluster percentile bootstrap"
+comparisons_are_exploratory = true
+significance_testing = false
+
+[interpretation]
+guard = "These are no-retraining robustness checks. Subset metrics change prevalence and sample size; the 236 cohort deliberately tests the effect of treating two suspicious all-zero records as negatives; alternative bags do not validate individual-whistle behavior or real-time deployment."

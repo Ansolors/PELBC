@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use PELBC, please cite the software and the accompanying paper."
+title: "PELBC: Offline encounter-level behavioral-context scoring from dolphin whistles"
+type: software
+authors:
+  - family-names: Qi
+    given-names: Yifan
+  - family-names: Li
+    given-names: Songhai
+version: 0.1.0
+date-released: 2026-09-17
+repository-code: "https://github.com/Ansolors/PELBC"
+keywords:
+  - bioacoustics
+  - dolphin whistles
+  - passive acoustic monitoring
+  - multilabel classification
+preferred-citation:
+  type: article
+  title: "Predicting encounter-level behavioral context from Indo-Pacific humpback dolphin whistles: A leakage-aware weakly supervised benchmark"
+  authors:
+    - family-names: Qi
+      given-names: Yifan
+    - family-names: Li
+      given-names: Songhai
+  year: 2026

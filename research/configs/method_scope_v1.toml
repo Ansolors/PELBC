@@ -1,0 +1,149 @@
+[scope]
+method_scope_id = "method_scope_v1"
+frozen_on = "2026-08-28"
+status = "frozen_for_confirmatory_comparison"
+independent_unit = "encounter"
+instance_unit = "whistle_clip"
+supervision_scope = "encounter_bag"
+task = "four-label behavioral-context classification"
+main_model_id = "hf_lw_gam"
+
+[representation]
+input = "high-frequency log-mel or multi-resolution spectrogram per whistle"
+frequency_configuration_status = "frozen_by_step_06_spectral_audit"
+main_sample_rate_hz = 96000
+main_frequency_range_hz = [500, 40000]
+main_preprocessing_id = "whistle_logmel_96k_v1"
+bandwidth_sensitivity_sample_rate_hz = 192000
+bandwidth_sensitivity_frequency_range_hz = [500, 90000]
+mandatory_audits = [
+  "spectral occupancy by sample rate and encounter",
+  "energy retained under candidate resampling rates",
+  "duration and time-frequency resolution trade-off",
+  "recording-quality and background-energy proxies",
+]
+prohibit_unjustified_16khz_or_32khz_main_input = true
+reason = "The audited core tonal band is preserved to 40 kHz; rarer 40-96 kHz components are separated into a sensitivity analysis because native sample rate is strongly confounded with year"
+
+[main_model]
+id = "hf_lw_gam"
+name = "HF-LW-GAM"
+expanded_name = "High-Frequency Label-Wise Gated-Attention Multiple-Instance Model"
+instance_encoder = "small_2d_cnn"
+pooling = "one_gated_attention_head_per_behavior_label"
+output = "four encounter-level sigmoid probabilities"
+new_architecture_claim = false
+attention_is_instance_ground_truth = false
+
+[[required_models]]
+id = "prior_constant"
+role = "null_baseline"
+input = "training-fold label prevalence"
+pooling = "none"
+
+[[required_models]]
+id = "bag_size_logistic"
+role = "nuisance_baseline"
+input = "whistle count, total duration, duration summaries"
+pooling = "encounter summary"
+
+[[required_models]]
+id = "metadata_logistic"
+role = "nuisance_baseline"
+input = "non-behavior encounter metadata only"
+pooling = "none"
+
+[[required_models]]
+id = "handcrafted_logistic"
+role = "traditional_acoustic_baseline"
+input = "per-whistle handcrafted features aggregated within encounter"
+pooling = "predefined robust encounter statistics"
+
+[[required_models]]
+id = "cnn_mean"
+role = "pooling_ablation"
+input = "learned whistle embeddings"
+pooling = "mean"
+
+[[required_models]]
+id = "cnn_max"
+role = "pooling_ablation"
+input = "learned whistle embeddings"
+pooling = "max"
+
+[[required_models]]
+id = "cnn_linear_softmax"
+role = "pooling_ablation"
+input = "learned whistle embeddings"
+pooling = "linear_softmax"
+
+[[required_models]]
+id = "cnn_shared_gated_attention"
+role = "attention_ablation"
+input = "learned whistle embeddings"
+pooling = "shared_gated_attention"
+
+[[required_models]]
+id = "hf_lw_gam"
+role = "main_model"
+input = "high-frequency whistle spectrograms"
+pooling = "label_wise_gated_attention"
+
+[[required_models]]
+id = "panns_frozen_mil"
+role = "generic_pretraining_comparator"
+input = "frozen PANNs embeddings"
+pooling = "same frozen MIL head policy"
+
+[[required_models]]
+id = "aves_frozen_mil"
+role = "bioacoustic_pretraining_comparator"
+input = "frozen AVES embeddings"
+pooling = "same frozen MIL head policy"
+
+[validation]
+outer_unit = "encounter"
+inner_unit = "encounter"
+nested_model_selection = true
+outer_fold_count_status = "frozen_by_step_07_split_feasibility_audit"
+group_unit = "recording_campaign_block"
+campaign_definition = "maximal within-year chain of consecutive observed recording dates"
+outer_fold_count = 5
+inner_fold_count = 4
+primary_campaign_count = 50
+same_assignments_for_every_model = true
+required_stress_tests = [
+  "date_or_year_blocked_generalization",
+  "fixed_whistle_counts_1_3_5_10_20_and_full",
+  "sample_rate_and_bandwidth_sensitivity",
+  "predefined_label_cohorts_234_236_218_121",
+]
+training_only_operations = [
+  "normalization",
+  "feature selection",
+  "class weighting",
+  "hyperparameter selection",
+  "early stopping",
+  "threshold selection",
+  "calibration",
+]
+
+[statistics]
+primary_metric = "encounter-level macro average precision"
+comparison_unit = "paired out-of-fold encounter prediction"
+uncertainty = "10000-resample recording-campaign cluster percentile bootstrap confidence intervals"
+significance = "10000-draw paired recording-campaign prediction-swap permutation with Holm correction for four confirmatory contrasts"
+prohibit_fold_level_independent_t_test = true
+
+[claims]
+allow = [
+  "encounter-level observed behavioral-context recognition",
+  "association between whistle acoustics and observed encounter context",
+  "offline evidence accumulation by detected-whistle count",
+]
+prohibit = [
+  "per-whistle ground-truth behavior identification",
+  "causal or communicative-intent interpretation",
+  "validated at-sea real-time behavior recognition",
+  "first use of MIL in bioacoustics or marine-mammal acoustics",
+]

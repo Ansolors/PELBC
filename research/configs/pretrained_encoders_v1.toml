@@ -1,0 +1,105 @@
+[protocol]
+protocol_id = "pretrained_encoders_v1"
+frozen_on = "2026-08-28"
+status = "frozen_before_pretrained_model_evaluation"
+source_dataset_version = "0.4.0"
+instance_filter = "primary_analysis_cohort AND main_discrete_whistle_instance"
+expected_instance_count = 4126
+waveform_dtype = "float32"
+channel_policy = "require_mono"
+pcm_policy = "require_signed_pcm16_little_endian"
+dc_policy = "subtract_per_clip_float64_mean_before_resampling"
+resampling = "scipy.signal.resample_poly_polyphase_antialiasing"
+resampling_scipy_version = "1.11.1"
+inference_batch_size = 1
+encoder_trainable = false
+pooling = "encoder_specific_frozen_pooling_declared_below"
+embedding_dtype = "float32"
+device_for_canonical_cache = "cpu"
+torch_version = "2.2.2"
+torchaudio_version = "2.2.2"
+numpy_version = "1.24.3"
+missing_or_invalid_asset_policy = "fail_closed"
+existing_embedding_policy = "verify_then_resume"
+
+[storage]
+cache_root = "results/cache/pretrained_embeddings_v1"
+manifest_root = "results/pretrained_embeddings"
+runtime_environment = "results/pretrained_embeddings/runtime_environment_v1.json"
+benchmark = "results/pretrained_embeddings/pretrained_embedding_benchmark_v1.json"
+
+[encoders.panns]
+encoder_key = "panns"
+encoder_id = "panns_cnn14_audioset_frozen_v1"
+encoder_revision = "panns_inference@f673f604ec6f4805a61c5b3be087e24776ec5fda+Cnn14_mAP0.431@0dc499e40e97"
+architecture = "Cnn14"
+pooling = "native_Cnn14_global_max_plus_mean_then_fc1_embedding"
+source_repository = "https://github.com/qiuqiangkong/panns_inference"
+source_revision = "f673f604ec6f4805a61c5b3be087e24776ec5fda"
+source_path = "results/cache/external_sources/panns_inference"
+source_license_path = "results/cache/external_sources/panns_inference/LICENSE.MIT"
+source_license_sha256 = "ebf680a8816f15b367981f48d461369a9848a29c9ce644c249bbcbaa4831a01f"
+license = "MIT"
+package_version = "panns-inference==0.1.1"
+weight_path = "results/cache/pretrained_weights/Cnn14_mAP=0.431.pth"
+weight_primary_url = "https://zenodo.org/records/3987831/files/Cnn14_mAP%3D0.431.pth?download=1"
+weight_record_doi = "10.5281/zenodo.3987831"
+weight_bytes = 327428481
+weight_md5 = "541141fa2ee191a88f24a3219fff024e"
+weight_sha256 = "0dc499e40e9761ef5ea061ffc77697697f277f6a960894903df3ada000e34b31"
+input_sample_rate_hz = 32000
+retained_nyquist_hz = 16000
+effective_feature_max_hz = 14000
+embedding_dimension = 2048
+minimum_input_samples = 10240
+short_clip_policy = "right_zero_pad_only_to_10240_samples"
+long_clip_policy = "preserve_full_duration_no_crop"
+window_size_samples = 1024
+hop_size_samples = 320
+mel_bins = 64
+mel_min_hz = 50
+mel_max_hz = 14000
+audioset_class_count = 527
+manifest_path = "results/pretrained_embeddings/panns_embedding_manifest_v1.jsonl"
+summary_path = "results/pretrained_embeddings/panns_embedding_summary_v1.json"
+
+[encoders.aves]
+encoder_key = "aves"
+encoder_id = "aves_base_bio_frozen_v1"
+encoder_revision = "earthspecies/aves@fd1b660ac454719d2c4b9628df2d0cd3993a4c89+aves-base-bio@7a7dfaff2ea0"
+architecture = "AVES-base-bio_wav2vec2"
+pooling = "arithmetic_mean_over_last_layer_time_frames"
+source_repository = "https://github.com/earthspecies/aves"
+source_revision = "fd1b660ac454719d2c4b9628df2d0cd3993a4c89"
+source_path = "results/cache/external_sources/aves"
+source_license_path = "results/cache/external_sources/aves/LICENSE"
+source_license_sha256 = "0471239e2a673efde45c299896fd2a65f856a76a8c7e4d06752ba0b46608f43e"
+license = "MIT"
+package_version = "esp-aves==1.0.0"
+weight_path = "results/cache/pretrained_weights/aves-base-bio.torchaudio.pt"
+weight_primary_url = "https://storage.googleapis.com/esp-public-files/ported_aves/aves-base-bio.torchaudio.pt"
+weight_bytes = 377570545
+weight_md5 = "f2124a57e2ce7ef005dfd084cf2e81f9"
+weight_sha256 = "7a7dfaff2ea0b617cae1d82d7831e766be2a9ac00e37962a26f0a1b285be2530"
+model_config_path = "results/cache/pretrained_weights/aves-base-bio.torchaudio.model_config.json"
+model_config_url = "https://storage.googleapis.com/esp-public-files/ported_aves/aves-base-bio.torchaudio.model_config.json"
+model_config_bytes = 999
+model_config_sha256 = "5c6ad4a9469bfa0f4ca705eed0cb814241048546833cbd291a32a6082ed96dc9"
+input_sample_rate_hz = 16000
+retained_nyquist_hz = 8000
+effective_feature_max_hz = 8000
+embedding_dimension = 768
+minimum_input_samples = 400
+short_clip_policy = "no_padding_all_dataset_clips_exceed_frontend_minimum"
+long_clip_policy = "preserve_full_duration_no_crop"
+layer = -1
+batch_padding_policy = "batch_size_one_no_waveform_padding"
+manifest_path = "results/pretrained_embeddings/aves_embedding_manifest_v1.jsonl"
+summary_path = "results/pretrained_embeddings/aves_embedding_summary_v1.json"
+
+[interpretation]
+comparison_role = "frozen_low_band_transfer_baselines"
+primary_high_frequency_representation = "whistle_logmel_96k_v1_0.5_to_40_kHz"
+panns_band_statement = "PANNs receives 32 kHz audio and its mel frontend ends at 14 kHz."
+aves_band_statement = "AVES receives 16 kHz audio, so frequencies above 8 kHz are unavailable."
+prohibited_claim = "Neither frozen encoder represents the complete 0.5-40 kHz main-analysis bandwidth."

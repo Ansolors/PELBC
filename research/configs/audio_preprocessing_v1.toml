@@ -1,0 +1,99 @@
+[preprocessing]
+preprocessing_id = "whistle_logmel_96k_v1"
+frozen_on = "2026-08-28"
+source_dataset_version = "0.2.0"
+output_dataset_version = "0.3.0"
+target_sample_rate_hz = 96000
+input_dtype = "pcm16"
+working_dtype = "float32"
+remove_per_clip_dc_mean = true
+amplitude_scaling = "divide_pcm16_by_32768"
+
+[resampling]
+method = "scipy_signal_resample_poly"
+window = "kaiser"
+kaiser_beta = 5.0
+padtype = "constant"
+reason = "96 kHz preserves the audited 2-40 kHz core band with an 8 kHz Nyquist guard while suppressing recording-regime-specific ultrasonic content"
+
+[stft]
+n_fft = 2048
+win_length = 1024
+hop_length = 256
+window = "periodic_hann"
+center = false
+pad_end = true
+power = 2.0
+window_duration_ms = 10.666666666666666
+hop_duration_ms = 2.6666666666666665
+fft_grid_spacing_hz = 46.875
+window_limited_resolution_hz = 93.75
+zero_padding_factor = 2
+
+[mel]
+n_mels = 128
+f_min_hz = 500.0
+f_max_hz = 40000.0
+scale = "htk"
+normalization = "slaney_area"
+
+[log]
+conversion = "10_log10_power"
+reference = "per_clip_maximum"
+top_db = 80.0
+expected_minimum = -80.0
+expected_maximum = 0.0
+
+[normalization]
+model_input = "relative_logmel_followed_by_per_mel_zscore"
+fit_scope = "each training partition only"
+minimum_standard_deviation = 1.0e-6
+prohibit_global_dataset_statistics_before_split = true
+
+[duration]
+crop = "none"
+instance_time_axis = "variable"
+short_clip_policy = "right_zero_pad_to_one_complete_window"
+tail_policy = "right_zero_pad_to_cover_final_partial_frame"
+batching = "duration_bucket_then_right_pad_with_explicit_time_mask"
+
+[instance_cohorts]
+main = "primary encounter cohort AND loop_type is null"
+main_encounters = 234
+main_whistles = 4126
+all_segments_sensitivity = "primary encounter cohort including 26 loop-type complex segments"
+all_segments_sensitivity_encounters = 234
+all_segments_sensitivity_whistles = 4152
+high_confidence_sensitivity = "main AND core tonal median salience >= 5 dB AND core tonal frame fraction >= 0.05 AND no exact clipping"
+high_confidence_sensitivity_encounters = 234
+high_confidence_sensitivity_whistles = 3884
+
+[quality_policy]
+large_dc_offset = "correct by per-clip mean removal; do not exclude"
+very_low_rms = "retain because visual review found visible tonal contours; relative-dB representation removes gain scale"
+exact_clipping = "retain in main cohort; exclude only in predefined high-confidence sensitivity"
+loop_type_complex_segment = "exclude from main discrete-whistle cohort; include in all-segments sensitivity"
+nonloop_duration_over_3s = "retain with variable-length masked encoding"
+automated_tonal_score = "not ground truth and not used to assign behavior"
+
+[bandwidth_sensitivity]
+sample_rate_hz = 192000
+n_fft = 4096
+win_length = 2048
+hop_length = 512
+n_mels = 192
+f_min_hz = 500.0
+f_max_hz = 90000.0
+purpose = "test whether rare harmonics above 40 kHz add held-out information beyond the 96 kHz main representation"
+interpretation_guard = "performance gain must survive year/sample-rate stress tests because approximately 83 kHz components recur across recordings"
+
+[pretrained_encoder_policy]
+rule = "use each encoder's required sample rate and report its retained passband explicitly"
+comparison = "pretrained models are bandwidth-limited comparators, not substitutes for the frozen main representation"
+
+[storage]
+cache_dtype = "float16"
+training_dtype = "float32"
+cache_root = "results/cache/logmel_96k_v1"
+cache_is_rebuildable = true
+cache_is_source_of_truth = false

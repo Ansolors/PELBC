@@ -1,0 +1,31 @@
+protocol_id = "bandwidth_sensitivity_execution_v1"
+frozen_at = "2026-08-29"
+frozen_before_any_full_cache_or_bandwidth_model_result = true
+model_id = "hf_lw_gam"
+main_representation_id = "whistle_logmel_96k_v1"
+sensitivity_representation_id = "whistle_logmel_192k_90k_v1"
+sample_rate_hz = 192000
+frequency_range_hz = [500, 90000]
+n_mels = 192
+main_instance_count = 4126
+
+[paired_training]
+outer_assignments = "identical primary five-fold campaign assignments"
+candidate = "reuse the official 96-kHz HF-LW-GAM selected candidate separately within each outer fold"
+fixed_epochs = "reuse the official 96-kHz selected final epoch separately within each outer fold"
+final_seeds = [20260828, 20260829, 20260830]
+retrain_from_scratch = true
+repeat_inner_selection = false
+repeat_calibration = false
+test_bags_are_complete = true
+training_bag_cap_and_augmentation = "unchanged candidate-specific primary settings"
+
+[statistics]
+probability_kind = "raw"
+metric = "macro_average_precision"
+uncertainty = "10000-resample paired recording-campaign cluster bootstrap"
+report_paired_delta_192k_minus_96k = true
+significance_testing = false
+
+[interpretation]
+guard = "This is an exploratory same-architecture representation sensitivity, not an independently retuned 192-kHz model. Reusing hyperparameters selected at 96 kHz may favor the primary representation; sample rate, year and location remain confounded, and components above 40 kHz may include harmonics or recorder artifacts."

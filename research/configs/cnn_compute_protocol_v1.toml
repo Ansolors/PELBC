@@ -1,0 +1,31 @@
+[protocol]
+protocol_id = "cnn_compute_protocol_v1"
+frozen_on = "2026-08-28"
+status = "frozen_before_any_eligible_cnn_inner_selection"
+applies_to = [
+  "hf_lw_gam",
+  "cnn_mean",
+  "cnn_max",
+  "cnn_linear_softmax",
+  "cnn_shared_gated_attention",
+]
+base_modeling_protocol = "modeling_protocol_v1"
+run_stage_suffix = "cnn_compute_v1"
+outer_test_accessed_for_decision = false
+eligible_inner_scores_inspected_for_decision = false
+resource_pilot_scores_inspected_for_decision = false
+
+[candidate_subset]
+registered_candidate_count = 12
+eligible_candidate_ids = ["n01", "n04", "n05", "n08", "n09", "n12"]
+eligible_candidate_count = 6
+selection_basis = "balanced_parameter_space_coverage_without_performance_results"
+coverage = "each of three base-channel sizes twice; embedding, attention, dropout, learning-rate, weight-decay, cap and augmentation levels balanced"
+excluded_candidate_ids = ["n02", "n03", "n06", "n07", "n10", "n11"]
+
+[training]
+maximum_epochs = 50
+early_stopping_patience = 8
+early_stopping_minimum_delta = 0.0001
+validation_frequency_epochs = 1
+reason = "bounded compute after full-fold wall-clock pilots; no eligible validation score was inspected"

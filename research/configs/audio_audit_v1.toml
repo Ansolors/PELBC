@@ -1,0 +1,38 @@
+[audit]
+audit_id = "native_audio_quality_spectral_v1"
+source_dataset_version = "0.2.0"
+window_seconds = 0.010666666666666666
+hop_fraction = 0.5
+max_frames_per_clip = 512
+amplitude_percentile_sample_cap = 200000
+spectral_baseline_quantile = 0.20
+analysis_lower_hz = 500.0
+core_tonal_lower_hz = 2000.0
+core_tonal_upper_hz = 40000.0
+ultrasonic_tonal_lower_hz = 40000.0
+ultrasonic_tonal_upper_hz = 96000.0
+supra96_tonal_lower_hz = 96000.0
+supra96_tonal_upper_hz = 136000.0
+tonal_smoothing_time_sigma_frames = 0.8
+tonal_smoothing_frequency_sigma_bins = 1.0
+tonal_local_baseline_width_hz = 3000.0
+tonal_salience_threshold_db = 3.0
+tonal_minimum_duration_seconds = 0.025
+retention_cutoffs_hz = [8000, 16000, 24000, 32000, 40000, 48000, 64000, 80000, 96000]
+frequency_quantiles = [0.50, 0.90, 0.95, 0.99]
+
+[descriptive_flags]
+exact_clipping_min_fraction = 0.0
+near_clipping_min_fraction = 0.001
+near_clipping_amplitude_fraction = 0.99
+large_dc_offset_fraction_full_scale = 0.01
+very_low_rms_dbfs = -60.0
+large_zero_fraction = 0.50
+low_tonal_component_frame_fraction = 0.01
+nonloop_long_duration_seconds = 3.0
+
+[interpretation]
+raw_energy = "Includes whistle, background, recorder response and noise; never used alone to choose bandwidth."
+positive_excess_energy = "Positive power above the within-clip 20th-percentile spectrum; it still includes stochastic broadband noise and is not treated as whistle energy."
+tonal_component = "Best continuous narrow-band component is measured separately in 2-40, 40-96 and 96-136 kHz locally whitened spectrograms. The 2 kHz floor avoids low-frequency flow/engine-edge artefacts but may miss rare very-low whistles; all components are bandwidth/quality proxies rather than validated contours."
+quality_flags = "Descriptive audit flags only; exclusion policy is frozen only after reviewing the full distributions."

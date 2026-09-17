@@ -1,0 +1,463 @@
+[protocol]
+protocol_id = "modeling_protocol_v1"
+frozen_on = "2026-08-28"
+status = "frozen_before_model_selection"
+source_dataset_version = "0.4.0"
+split_protocol_id = "campaign_grouped_nested_validation_v1"
+preprocessing_id = "whistle_logmel_96k_v1"
+independent_unit = "encounter"
+instance_unit = "whistle_clip"
+label_scope = "encounter_bag"
+label_order = ["Feeding", "Travelling", "Milling", "Socializing"]
+primary_metric = "encounter_level_macro_average_precision"
+outer_test_access_during_selection = false
+
+[data]
+primary_encounters = 234
+main_instances = 4126
+feature_mel_bins = 128
+feature_dtype_on_disk = "float16"
+feature_dtype_in_memory = "float32"
+instance_filter = "primary_analysis_cohort AND main_discrete_whistle_instance"
+instance_order = "sequence_index"
+variable_duration_policy = "no_crop_no_resize"
+batching_policy = "sort_instances_by_time_then_masked_right_pad_within_encoder_microbatch"
+normalization = "per_mel_zscore_fit_on_current_training_partition_only"
+normalization_minimum_standard_deviation = 1.0e-6
+
+[leakage_guards]
+all_whistles_from_one_encounter_remain_in_one_bag = true
+campaigns_disjoint_across_train_validation_test = true
+normalizer_fit_on_training_partition_only = true
+class_weights_fit_on_training_partition_only = true
+tabular_imputation_scaling_and_categories_fit_on_training_partition_only = true
+outer_test_predictions_prohibited_during_candidate_selection = true
+per_whistle_behavior_targets_prohibited = true
+
+[classical.common]
+solver = "liblinear"
+penalty = "l2"
+maximum_iterations = 5000
+independent_binary_heads = true
+numeric_missing_policy = "training_median_plus_missing_indicator"
+numeric_scaling = "training_mean_and_standard_deviation"
+categorical_policy = "training_vocabulary_one_hot_unknown_all_zero"
+
+[classical.search]
+c_values = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
+class_weight_options = ["none", "balanced"]
+candidate_count_per_tunable_baseline = 12
+maximum_candidates_per_outer_fold = 24
+
+[prior_constant]
+model_id = "prior_constant"
+fit = "per_label_training_prevalence"
+candidate_count = 1
+
+[bag_size_logistic]
+model_id = "bag_size_logistic"
+feature_names = [
+  "whistle_count",
+  "log1p_whistle_count",
+  "total_duration_seconds",
+  "mean_duration_seconds",
+  "std_duration_seconds",
+  "minimum_duration_seconds",
+  "duration_q25_seconds",
+  "median_duration_seconds",
+  "duration_q75_seconds",
+  "maximum_duration_seconds",
+]
+
+[metadata_logistic]
+model_id = "metadata_logistic"
+numeric_features = [
+  "number_of_scans",
+  "encounter_duration",
+  "water_temperature_c",
+  "depth",
+  "beaufort",
+  "total_individuals_numeric_unlabeled",
+  "subgroup_count",
+  "group_diameter",
+  "group_count_C",
+  "group_count_Neo",
+  "group_count_SA",
+  "group_count_SJ",
+  "group_count_SS",
+  "group_count_UA",
+  "group_count_UJ",
+  "gillnet_flags_total",
+  "boat_traffic_number",
+  "vessels_average_lt_50m",
+  "vessels_average_50_500m",
+  "vessels_average_500_1000m",
+  "vessels_average_gt_1km",
+  "vessels_max_lt_50m",
+  "vessels_max_50_500m",
+  "vessels_max_500_1000m",
+  "vessels_max_gt_1km",
+]
+categorical_features = [
+  "audio_year",
+  "audio_month",
+  "selected_location",
+  "sample_rate_hz",
+  "weather_code",
+  "habitat",
+  "group_type",
+  "drone",
+  "farm_type",
+  "construction",
+  "boat_traffic_type",
+]
+forbidden_source_prefixes = ["activity_"]
+forbidden_source_fields = [
+  "tail_slaps",
+  "long_dive",
+  "direction_change",
+  "boat_moves",
+  "observer_notes",
+  "gps_coordinate_text",
+  "gps_reference",
+  "time_start",
+  "time_end",
+]
+interpretation = "negative-control nuisance model; not an acoustic deployment model"
+
+[handcrafted_logistic]
+model_id = "handcrafted_logistic"
+per_whistle_features = [
+  "duration_seconds",
+  "core_tonal_component_frequency_q05_hz",
+  "core_tonal_component_frequency_q50_hz",
+  "core_tonal_component_frequency_q95_hz",
+  "core_tonal_component_frequency_max_hz",
+  "core_tonal_component_bandwidth_q90_hz",
+  "core_tonal_component_duration_seconds",
+  "core_tonal_component_frame_fraction",
+  "core_tonal_component_median_salience_db",
+  "core_tonal_component_peak_salience_db",
+  "rms_dbfs",
+  "temporal_dynamic_db",
+  "exact_clipping_fraction",
+  "low_activity_frame_fraction",
+]
+aggregation_statistics = ["mean", "std", "minimum", "q25", "median", "q75", "maximum"]
+add_missing_fraction_per_feature = true
+feature_selection = "none"
+interpretation = "traditional deterministic acoustic summary baseline"
+
+[cnn_encoder]
+encoder_id = "small_high_frequency_cnn_v1"
+input_channels = 1
+convolution_kernel = [3, 3]
+convolution_stride = [2, 2]
+convolution_padding = [1, 1]
+block_count = 3
+channel_multipliers = [1, 2, 4]
+normalization = "channel_layer_norm_per_time_frequency_position"
+activation = "silu"
+global_pooling = "masked_mean_over_valid_time_and_frequency"
+use_duration_scalar = false
+frequency_or_time_crop = false
+frequency_or_time_resize = false
+
+[mil_heads]
+cnn_mean = "mean_instance_embedding"
+cnn_max = "max_instance_embedding"
+cnn_linear_softmax = "labelwise_linear_softmax_over_instance_probabilities"
+cnn_shared_gated_attention = "one_shared_gated_attention_distribution_then_four_sigmoid_heads"
+hf_lw_gam = "one_label_specific_gated_attention_distribution_and_classifier_per_label"
+attention_interpretation = "model evidence weight only; never per-whistle behavior ground truth"
+
+[cnn_ablation_selection]
+selection_model_id = "hf_lw_gam"
+independently_tuned_model_ids = ["hf_lw_gam"]
+matched_pooling_ablation_model_ids = [
+  "cnn_mean",
+  "cnn_max",
+  "cnn_linear_softmax",
+  "cnn_shared_gated_attention",
+]
+candidate_source = "selected_hf_lw_gam_candidate_within_same_outer_training_pool"
+ablation_candidates_per_outer_fold = 1
+independent_ablation_reoptimization = false
+outer_test_information_used = false
+reason = "controlled pooling ablation and compute feasibility; frozen before official inner selection"
+
+[neural_training]
+loss = "binary_cross_entropy_with_logits"
+positive_weight = "negative_over_positive_in_current_training_partition"
+optimizer = "adamw"
+maximum_epochs = 100
+early_stopping_patience = 12
+early_stopping_minimum_delta = 0.0001
+gradient_clip_norm = 5.0
+encoder_microbatch_max_instances = 32
+mixed_precision = false
+selection_repetitions = 1
+final_outer_seeds = [20260828, 20260829, 20260830]
+deterministic_algorithms = true
+
+[[neural_candidates]]
+candidate_id = "n01"
+base_channels = 8
+embedding_dim = 64
+attention_dim = 32
+dropout = 0.10
+learning_rate = 0.001
+weight_decay = 0.0001
+encounter_batch_size = 8
+maximum_training_instances_per_bag = 32
+augmentation = "none"
+
+[[neural_candidates]]
+candidate_id = "n02"
+base_channels = 8
+embedding_dim = 64
+attention_dim = 32
+dropout = 0.30
+learning_rate = 0.001
+weight_decay = 0.01
+encounter_batch_size = 8
+maximum_training_instances_per_bag = 64
+augmentation = "light_mask"
+
+[[neural_candidates]]
+candidate_id = "n03"
+base_channels = 8
+embedding_dim = 128
+attention_dim = 64
+dropout = 0.10
+learning_rate = 0.0003
+weight_decay = 0.0001
+encounter_batch_size = 4
+maximum_training_instances_per_bag = 32
+augmentation = "light_mask"
+
+[[neural_candidates]]
+candidate_id = "n04"
+base_channels = 8
+embedding_dim = 128
+attention_dim = 64
+dropout = 0.30
+learning_rate = 0.0003
+weight_decay = 0.01
+encounter_batch_size = 4
+maximum_training_instances_per_bag = 64
+augmentation = "none"
+
+[[neural_candidates]]
+candidate_id = "n05"
+base_channels = 16
+embedding_dim = 64
+attention_dim = 32
+dropout = 0.10
+learning_rate = 0.001
+weight_decay = 0.01
+encounter_batch_size = 8
+maximum_training_instances_per_bag = 32
+augmentation = "light_mask"
+
+[[neural_candidates]]
+candidate_id = "n06"
+base_channels = 16
+embedding_dim = 64
+attention_dim = 32
+dropout = 0.30
+learning_rate = 0.0003
+weight_decay = 0.0001
+encounter_batch_size = 8
+maximum_training_instances_per_bag = 64
+augmentation = "none"
+
+[[neural_candidates]]
+candidate_id = "n07"
+base_channels = 16
+embedding_dim = 128
+attention_dim = 32
+dropout = 0.10
+learning_rate = 0.0003
+weight_decay = 0.01
+encounter_batch_size = 4
+maximum_training_instances_per_bag = 32
+augmentation = "none"
+
+[[neural_candidates]]
+candidate_id = "n08"
+base_channels = 16
+embedding_dim = 128
+attention_dim = 64
+dropout = 0.30
+learning_rate = 0.001
+weight_decay = 0.0001
+encounter_batch_size = 4
+maximum_training_instances_per_bag = 64
+augmentation = "light_mask"
+
+[[neural_candidates]]
+candidate_id = "n09"
+base_channels = 24
+embedding_dim = 64
+attention_dim = 32
+dropout = 0.10
+learning_rate = 0.0003
+weight_decay = 0.0001
+encounter_batch_size = 4
+maximum_training_instances_per_bag = 64
+augmentation = "light_mask"
+
+[[neural_candidates]]
+candidate_id = "n10"
+base_channels = 24
+embedding_dim = 64
+attention_dim = 64
+dropout = 0.30
+learning_rate = 0.001
+weight_decay = 0.01
+encounter_batch_size = 4
+maximum_training_instances_per_bag = 32
+augmentation = "none"
+
+[[neural_candidates]]
+candidate_id = "n11"
+base_channels = 24
+embedding_dim = 128
+attention_dim = 32
+dropout = 0.10
+learning_rate = 0.001
+weight_decay = 0.0001
+encounter_batch_size = 4
+maximum_training_instances_per_bag = 64
+augmentation = "none"
+
+[[neural_candidates]]
+candidate_id = "n12"
+base_channels = 24
+embedding_dim = 128
+attention_dim = 64
+dropout = 0.30
+learning_rate = 0.0003
+weight_decay = 0.01
+encounter_batch_size = 4
+maximum_training_instances_per_bag = 32
+augmentation = "light_mask"
+
+[augmentation.none]
+frequency_mask_count = 0
+frequency_mask_max_bins = 0
+time_mask_count = 0
+time_mask_max_fraction = 0.0
+
+[augmentation.light_mask]
+frequency_mask_count = 1
+frequency_mask_max_bins = 8
+time_mask_count = 1
+time_mask_max_fraction = 0.08
+mask_fill_after_normalization = 0.0
+
+[pretrained_frozen_mil]
+model_ids = ["panns_frozen_mil", "aves_frozen_mil"]
+encoder_trainable = false
+embedding_dimension = "read_and_validate_from_embedding_manifest"
+pooling_head = "label_wise_gated_attention"
+head_candidate_ids = ["p01", "p02", "p03", "p04", "p05", "p06"]
+required_manifest_fields = [
+  "whistle_id",
+  "encounter_id",
+  "encoder_id",
+  "encoder_revision",
+  "embedding_path_relative_to_project",
+  "embedding_shape",
+  "source_clip_sha256",
+  "embedding_sha256",
+  "input_sample_rate_hz",
+  "retained_nyquist_hz",
+  "license",
+]
+missing_embedding_policy = "fail_closed"
+bandwidth_limitation_must_be_reported = true
+encounter_batch_size = 8
+training_bag_policy = "complete_no_instance_subsampling"
+maximum_training_instances_per_bag = "none"
+
+[[pretrained_head_candidates]]
+candidate_id = "p01"
+attention_dim = 32
+dropout = 0.10
+learning_rate = 0.001
+weight_decay = 0.0001
+
+[[pretrained_head_candidates]]
+candidate_id = "p02"
+attention_dim = 32
+dropout = 0.30
+learning_rate = 0.001
+weight_decay = 0.01
+
+[[pretrained_head_candidates]]
+candidate_id = "p03"
+attention_dim = 64
+dropout = 0.10
+learning_rate = 0.0003
+weight_decay = 0.0001
+
+[[pretrained_head_candidates]]
+candidate_id = "p04"
+attention_dim = 64
+dropout = 0.30
+learning_rate = 0.0003
+weight_decay = 0.01
+
+[[pretrained_head_candidates]]
+candidate_id = "p05"
+attention_dim = 128
+dropout = 0.10
+learning_rate = 0.0003
+weight_decay = 0.01
+
+[[pretrained_head_candidates]]
+candidate_id = "p06"
+attention_dim = 128
+dropout = 0.30
+learning_rate = 0.001
+weight_decay = 0.0001
+
+[run_artifacts]
+root = "results/model_runs"
+required_files = [
+  "run_manifest.json",
+  "configuration.json",
+  "normalizer.json",
+  "history.jsonl",
+  "best_checkpoint.pt",
+  "predictions.jsonl",
+  "metrics.json",
+]
+save_inner_trial_history = true
+save_seed_level_predictions = true
+save_instance_attention = "selected_models_only_with_explicit_non_ground_truth_warning"
+atomic_writes = true
+
+[model_registry]
+required_model_ids = [
+  "prior_constant",
+  "bag_size_logistic",
+  "metadata_logistic",
+  "handcrafted_logistic",
+  "cnn_mean",
+  "cnn_max",
+  "cnn_linear_softmax",
+  "cnn_shared_gated_attention",
+  "hf_lw_gam",
+  "panns_frozen_mil",
+  "aves_frozen_mil",
+]
+confirmatory_model_ids = [
+  "prior_constant",
+  "bag_size_logistic",
+  "handcrafted_logistic",
+  "cnn_mean",
+  "hf_lw_gam",
+]

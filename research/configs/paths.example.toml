@@ -1,0 +1,16 @@
+# Copy to the ignored paths.toml and set private paths locally.
+# Relative paths are resolved from this configuration directory.
+[raw]
+encounters = "../../../private_data/encounters"
+whistle_clips = "../../../private_data/whistle_clips"
+environment_info = "../../../private_data/environment"
+
+[related]
+whistle_detector = "../../../private_detector"
+
+[project]
+manifests = "../data/manifests"
+processed = "../data/processed"
+results = "../results"
+figures = "../figures"
+manuscript = "../paper"
