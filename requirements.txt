@@ -1,0 +1,7 @@
+numpy>=1.24,<3
+scipy>=1.10,<2
+ultralytics==8.4.102
+torch>=2.2,<3
+torchvision>=0.17,<1
+Pillow>=10,<13
+matplotlib>=3.8,<4

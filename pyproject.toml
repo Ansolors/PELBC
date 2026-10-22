@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pelbc"
+version = "0.1.0"
+description = "PELBC: automated dolphin behavioral-context prediction from encounter recordings"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+authors = [
+  {name = "Yifan Qi"},
+  {name = "Songhai Li"},
+]
+keywords = [
+  "bioacoustics",
+  "dolphin whistles",
+  "passive acoustic monitoring",
+  "multilabel classification",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = [
+  "numpy>=1.24,<3",
+  "scipy>=1.10,<2",
+  "ultralytics==8.4.102",
+  "torch>=2.2,<3",
+  "torchvision>=0.17,<1",
+  "Pillow>=10,<13",
+  "matplotlib>=3.8,<4",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7,<9"]
+
+[project.scripts]
+pelbc-predict = "pelbc.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

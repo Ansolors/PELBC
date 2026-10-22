@@ -1,0 +1,19 @@
+# Only software source, checks, examples, and usage documentation are eligible.
+*
+!/src/
+!/src/pelbc/
+!/src/pelbc/*.py
+!/tests/
+!/tests/*.py
+!/examples/
+!/examples/*.py
+!/docs/
+!/docs/*.md
+!/predict_encounter.py
+!/pyproject.toml
+!/requirements.txt
+!/README.md
+!/README_zh-CN.md
+!/MODEL_CARD.md
+!/CITATION.cff
+!/.gitignore
